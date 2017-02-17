@@ -10,6 +10,7 @@ before_install:
   - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu trusty main restricted universe multiverse"
   - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu trusty-updates main restricted universe multiverse"
   - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu trusty-backports main restricted universe multiverse"
+  - sudo apt-get update
 # Install additional testing software
   - "pip install python-coveralls"
   - "pip install coverage"
