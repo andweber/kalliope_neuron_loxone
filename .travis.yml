@@ -16,7 +16,7 @@ install:
   - "wget https://github.com/kalliope-project/kalliope/archive/master.zip"
   - "unzip master.zip"
   - "cd kalliope-master"
-  - "apt-get install $(cat install/files/deb-packages_requirements.txt)"
+  - "sudo apt-get install $(cat install/files/deb-packages_requirements.txt)"
   - "pip install -r install/files/python_requirements.txt"
   - "python setup.py install"
   - "cd .."
