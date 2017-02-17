@@ -8,9 +8,9 @@ cache:
 # command to install dependencies
 before_install:
 # Install additional testing software
-  - "pip install python-coveralls --download-cache $HOME/.pip-cache"
-  - "pip install coverage  --download-cache $HOME/.pip-cache"
-  - "pip install flake8  --download-cache $HOME/.pip-cache"
+  - "pip install python-coveralls"
+  - "pip install coverage"
+  - "pip install flake8"
 install: 
 # install kalliope
   - "wget https://github.com/kalliope-project/kalliope/archive/master.zip"
