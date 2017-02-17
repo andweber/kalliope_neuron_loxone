@@ -8,8 +8,8 @@ from kalliope.core.NeuronModule import MissingParameterException
 from loxscontrol import Loxscontrol
 
 logging.basicConfig()
-logger = logging.getLogger("kalliope.neuron.loxone")
-logger.setLevel(logging.DEBUG)
+logger = logging.getLogger("kalliope.neuron.loxscontrol")
+#logger.setLevel(logging.DEBUG)
 
 
 class TestLoxSControl(unittest.TestCase):
@@ -45,7 +45,7 @@ class TestLoxSControl(unittest.TestCase):
                                         'room': u'0ceefd1d',
                                         'type': u'Jalousie',
                                         'uidAction': u'0c11982f'},
-                                       u'0c11982d': {'name': u'Living room',
+                                       u'0c11982d': {'name': u'Living room 2',
                                                      'room': u'0ceefd1d',
                                                      'type': u'Jalousie',
                                                      'uidAction': u'0c11982d'
@@ -57,6 +57,12 @@ class TestLoxSControl(unittest.TestCase):
                           'name': u'Something',
                           'type': u'undefined',
                           'uid': u'0c100510'}}
+
+        self.rooms = { u'0ceefd17': {'name': u'K\xfcche', 
+                                'uid': u'0ceefd17'}, 
+                                u'0ceefd1d': {'name':  u'Living room', 
+                                'uid': u'0ceefd17'} 
+                                }
 
         self.change_newstate = "on"
 
@@ -150,6 +156,75 @@ class TestLoxSControl(unittest.TestCase):
             "lx_structuredef": self.controls
         }
         run_test(parameters)
+        
+    def test_get(self):
+        """
+            Test get functions.
+
+            Verify that the get functions work correctly.
+
+            :return:
+
+        """        
+        
+        parameters = {
+            "lx_user": self.lxms_user,
+            "lx_password": self.lxms_password,
+            "lx_ip": self.lxms_ip,
+            "lx_structuredef": self.controls,
+            "control_name":  u'K\xfcche Arbeitsfl\xe4che',
+            "newstate": self.change_newstate        
+        }
+       
+        with mock.patch("requests.get"):
+                loxone_test = Loxscontrol(**parameters)
+                loxone_test._rooms = self.rooms
+ 
+                ###############
+                # Test get_type_by_uuid
+                # Test Categeories
+                self.assertEqual(loxone_test.get_type_by_uuid('0c10052e'), loxone_test.CAT_LIGTH)
+                self.assertEqual(loxone_test.get_type_by_uuid('0c10053e'), loxone_test.CAT_JALOUSIE)    
+                self.assertEqual(loxone_test.get_type_by_uuid('0c100510'), loxone_test.CAT_UNDEF)
+                
+                # Test Types
+                self.assertTrue(loxone_test.get_type_by_uuid('0c119829') in loxone_test.TYPE_SWITCH)
+                self.assertTrue(loxone_test.get_type_by_uuid('0c11982d') in loxone_test.TYPE_JALOUSIE)
+
+                # Test Rooms
+                self.assertEqual(loxone_test.get_type_by_uuid('0ceefd17'), loxone_test.CAT_ROOM)
+
+                # Test not found
+                self.assertTrue(loxone_test.get_type_by_uuid('not a valid uuid') is None)
+
+                ################
+                # Test get_name_by_uuid
+                # Test Types
+                self.assertEqual(loxone_test.get_name_by_uuid('0c10052e'), u'Light')
+                self.assertEqual(loxone_test.get_name_by_uuid('0c10053e'), u'Shading')
+
+                # Test Controls
+                self.assertEqual(loxone_test.get_name_by_uuid('0c119829'),  u'K\xfcche Arbeitsfl\xe4che')
+
+                # Test Rooms
+                self.assertEqual(loxone_test.get_name_by_uuid('0ceefd17'), u'K\xfcche')    
+    
+                # Test not found
+                self.assertTrue(loxone_test.get_name_by_uuid('not a valid uuid') is None)    
+
+                ################
+                # Test get_controluuid_by_name
+                # Test Control
+                self.assertEqual(loxone_test.get_controluuid_by_name(u'K\xfcche Arbeitsfl\xe4che'),'0c119829')
+                self.assertEqual(loxone_test.get_controluuid_by_name(u'Living room 2'),u'0c11982d')
+
+                # Categories are not working
+                self.assertEqual(loxone_test.get_controluuid_by_name(u'Light'), None)  
+                # Rooms are not working               
+                self.assertEqual(loxone_test.get_controluuid_by_name( u'K\xfcche'), None)
+                
+                
+                
 
     def test_change_by_name(self):
         """
@@ -202,7 +277,7 @@ class TestLoxSControl(unittest.TestCase):
         run_test(parameters,  expected_uuid,  expected_state)
 
         # change by name with success
-        parameters["control_name"] = "missing in definition"
+        parameters["control_name"] = "This_name_is_missing_in_definition"
         expected_uuid = None
         expected_state = "StateChangeError"
         run_test(parameters,  expected_uuid,  expected_state)

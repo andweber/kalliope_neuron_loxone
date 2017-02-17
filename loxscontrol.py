@@ -14,7 +14,7 @@ from kalliope.core.NeuronModule import MissingParameterException, \
 
 logging.basicConfig()
 logger = logging.getLogger("kalliope")
-logger.setLevel(logging.DEBUG)
+#logger.setLevel(logging.DEBUG)
 
 
 class Loxscontrol(NeuronModule):
@@ -35,6 +35,7 @@ class Loxscontrol(NeuronModule):
     CAT_LIGTH = "lights"
     CAT_JALOUSIE = "shading"
     CAT_UNDEF = "undefined"
+    CAT_ROOM = "room"
 
     # Status Code Definitions
     # IncompleteRequest - Parameter is missing or not complete / consistent
@@ -75,7 +76,8 @@ class Loxscontrol(NeuronModule):
         # check if parameters have been provided
         if self._is_parameters_ok():
 
-            # check provided args and do that
+            # name and state is given
+            # don't pay attention to kategorie
             if (self.change_name is not None) and \
                     (self.change_newstate is not None):
                 if self.change_switch_state_byname(self.change_name,
@@ -91,6 +93,25 @@ class Loxscontrol(NeuronModule):
                                  self.change_name)
                     self.status_code = "StateChangeError"
 
+            # Type lights and room and state is given
+            if (self.change_cattype is self.CAT_LIGTH) and \
+                    (self.change_room is not None) and \
+                    (self.change_newstate is not None):
+                if self.change_lights_byroom(self.change_room,
+                                                   self.change_newstate):
+                    logger.debug(self.neuron_name +
+                                 ": State of %s in room %s changed to %s",
+                                 self.change_name,
+                                 self.change_newstate)
+                    self.status_code = "Complete"
+                else:
+                    logger.debug(self.neuron_name +
+                                 " State of %s not changed!",
+                                 self.change_name)
+                    self.status_code = "StateChangeError"
+
+
+            # no valid combination found
             if self.status_code is None:
                 MissingParameterException(self.neuron_name +
                                           " needs more information to " +
@@ -152,7 +173,7 @@ class Loxscontrol(NeuronModule):
 
         return True
 
-    def change_switch_state_byuuid(self, controluuid,  newstate):
+    def change_state_byuuid(self, controluuid,  newstate):
         """
         Change the state of a switch identified by controlname.
 
@@ -195,15 +216,68 @@ class Loxscontrol(NeuronModule):
         :return: True if successful, False if not
 
         """
-        if self.get_uuid_by_name(controlname) is not None:
-            return self.change_switch_state_byuuid(
-                self.get_uuid_by_name(controlname), newstate)
+        uuid = self.get_controluuid_by_name(controlname)
+        if uuid is not None:
+            if self.get_type_by_uuid(uuid) in self.TYPE_SWITCH:
+                return self.change_state_byuuid(uuid, newstate)
+            else:
+                logger.debug(self.neuron_name +
+                         ': Name %s is not a Switch', controlname)
+                return False
         else:
             logger.debug(self.neuron_name +
                          ': Name %s not found in StructureDef', controlname)
             return False
 
-    def get_uuid_by_name(self, controlname):
+    def get_type_by_uuid(self,  uuid):
+        """
+        Return type identified by uuid.
+
+        :param uuid: uuid of the control element
+        :return: type of the control element
+        or None if not found
+
+        """
+        # check categories first
+        if uuid in self._controls:
+            return self._controls[uuid]['type']
+        
+        # check controls
+        for controlgroup in self._controls:
+            subcontrol = self._controls[controlgroup]["controls"]
+            if uuid in subcontrol:
+                return subcontrol[uuid]["type"]
+
+        # check rooms
+        if uuid in self._rooms:
+            return self.CAT_ROOM
+        return None 
+  
+    def get_name_by_uuid(self,  uuid):
+        """
+        Return name identified by uuid.
+
+        :param uuid: uuid of the control element
+        :return: name of the control element
+        or None if not found
+
+        """
+        # check categories first
+        if uuid in self._controls:
+            return self._controls[uuid]['name']
+        
+        # check controls
+        for controlgroup in self._controls:
+            subcontrol = self._controls[controlgroup]["controls"]
+            if uuid in subcontrol:
+                return subcontrol[uuid]["name"]
+
+        # check rooms
+        if uuid in self._rooms:
+            return self._rooms[uuid]['name']
+        return None   
+
+    def get_controluuid_by_name(self, controlname):
         """
         Return UUID identified by controlname.
 
