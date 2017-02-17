@@ -17,7 +17,7 @@ logger = logging.getLogger("kalliope")
 logger.setLevel(logging.DEBUG)
 
 
-class LoxSControl(NeuronModule):
+class Loxscontrol(NeuronModule):
 
     """NeuronModule Class for controlling a Loxone Homeautomation."""
 
@@ -37,12 +37,12 @@ class LoxSControl(NeuronModule):
     CAT_UNDEF = "undefined"
 
     # Status Code Definitions
-    # NameNotFound      - Name of Control Element not found in StructureDef
     # IncompleteRequest - Parameter is missing or not complete / consistent
     # Complete                 - Completed
     # StateChangeError  -  State of Control Element was not changed.
     #                                   Name not found, or changing failed
-    STATUS_CODE_DEF = {"NameNotFound",
+    # ReadText                 - A text is given to read.
+    STATUS_CODE_DEF = {
                        "IncompleteRequest",
                        "Complete",
                        "StateChangeError"
@@ -52,7 +52,7 @@ class LoxSControl(NeuronModule):
         """class init."""
 
         # call super init
-        super(LoxSControl, self).__init__(*args, **kwargs)
+        super(Loxscontrol, self).__init__(*args, **kwargs)
 
         # get parameters from the neuron
         self._host = kwargs.get('lx_ip', None)
@@ -61,7 +61,7 @@ class LoxSControl(NeuronModule):
         self._controls = kwargs.get('lx_structuredef', None)
 
         self.change_room = kwargs.get('control_room', None)
-        self.change_type = kwargs.get('control_type', None)
+        self.change_cattype = kwargs.get('control_type', None)
         self.change_name = kwargs.get('control_name', None)
         self.change_newstate = kwargs.get('newstate', None)
 
@@ -70,6 +70,7 @@ class LoxSControl(NeuronModule):
 
         # define output
         self.status_code = None
+        self.summary = None
 
         # check if parameters have been provided
         if self._is_parameters_ok():
@@ -80,7 +81,7 @@ class LoxSControl(NeuronModule):
                 if self.change_switch_state_byname(self.change_name,
                                                    self.change_newstate):
                     logger.debug(self.neuron_name +
-                                 " State of %s changed to %s",
+                                 ": State of %s changed to %s",
                                  self.change_name,
                                  self.change_newstate)
                     self.status_code = "Complete"
@@ -102,9 +103,10 @@ class LoxSControl(NeuronModule):
         # Finally say what I have done -> use a template
         self.message = {
             "status_code": self.status_code,
-            "change_name": self.change_name,
-            "change_newstate": self.change_newstate,
-            "change_room": self.change_room,
+            "control_name": self.change_name,
+            "control_newstate": self.change_newstate,
+            "control_room": self.change_room,
+            "summary": self.summary, 
         }
         self.say(self.message)
 
@@ -119,17 +121,17 @@ class LoxSControl(NeuronModule):
         # host ip is set
         if self._host is None:
             raise MissingParameterException(self.neuron_name +
-                                            " needs a miniserver IP")
+                                            ": needs a miniserver IP")
 
         # host user is set
         if self._user is None:
             raise MissingParameterException(self.neuron_name +
-                                            " needs a miniserver user")
+                                            ": needs a miniserver user")
 
         # host password is set
         if self._password is None:
             raise MissingParameterException(
-                self.neuron_name + " needs a miniserver user " +
+                self.neuron_name + ": needs a miniserver user " +
                 "password"
                 )
 
@@ -137,15 +139,16 @@ class LoxSControl(NeuronModule):
         if self._controls is None:
             if not self.load_config():
                 raise MissingParameterException(
-                    self.neuron_name + " can't load miniserver structure\
-            definition"
+                    self.neuron_name + ": can't load miniserver structure "
+                    "definition"
                     )
+            self.show_configinfo()
 
         # enough information that I can do something?
         if (self.change_name is None) and (self.change_room is None) \
-                and (self.change_type is None):
+                and (self.change_cattype is None):
             raise MissingParameterException(self.neuron_name +
-                                            " needs something to do")
+                                            ": needs something to do")
 
         return True
 
@@ -160,7 +163,7 @@ class LoxSControl(NeuronModule):
         """
 
         logger.debug(self.neuron_name +
-                     " Called Change State with %s UID and %s newstate",
+                     ": Called Change State with %s UID and %s newstate",
                      controluuid,  newstate)
         print controluuid
 
@@ -171,15 +174,15 @@ class LoxSControl(NeuronModule):
             r.raise_for_status()
         except requests.exceptions.HTTPError:
             logger.debug(self.neuron_name +
-                         " Change switch state failed with response: %r",
+                         ": Change switch state failed with response: %r",
                          r.text)
             return False
         except requests.exceptions.RequestException:
-            logger.debug(self.neuron_name+" Change switch state failed.")
+            logger.debug(self.neuron_name+": Change switch state failed.")
             return False
 
         logger.debug(self.neuron_name +
-                     ' UID %s changed state to %s', controluuid, newstate)
+                     ': UID %s changed state to %s', controluuid, newstate)
 # TODO: [Feature] check if state is correct -> analyse JSON answer
         return True
 
@@ -197,7 +200,7 @@ class LoxSControl(NeuronModule):
                 self.get_uuid_by_name(controlname), newstate)
         else:
             logger.debug(self.neuron_name +
-                         ' Name %s not found in StructureDef', controlname)
+                         ': Name %s not found in StructureDef', controlname)
             return False
 
     def get_uuid_by_name(self, controlname):
@@ -216,6 +219,59 @@ class LoxSControl(NeuronModule):
                     return subcontrol[element]["uidAction"]
         return None
 
+    def show_configinfo(self):
+        """
+        Print informations about the config to debug output
+
+        """
+        
+        # General infos
+        logger.debug(self.neuron_name + ": Loxone Structure Definition:")
+        logger.debug(self.neuron_name + ": Location: %s", self._location)
+        logger.debug(self.neuron_name + ": Language: %s", self._language)
+        
+        # Rooms
+        # logger.debug(self.neuron_name + ": Room title: %s", self._roomtitle)        
+        logger.debug(self.neuron_name + ": No. of Rooms: %d", 
+                len(self._rooms))
+        for room in self._rooms:
+            logger.debug(self.neuron_name + ":       %s",self._rooms[room]['name'])
+           
+        # Categories   
+        logger.debug(self.neuron_name + ": No. of Categories: %d", 
+                len(self._controls)) 
+        sum = 0
+        for cat in self._controls:
+            logger.debug(self.neuron_name + ":       %s",self._controls[cat]['name']) 
+            sum = sum + len(self._controls[cat]['controls'])
+        
+        # Controls 
+        logger.debug(self.neuron_name + ": Supported Types: %d", 
+                len(self.TYPE_SWITCH) + len(self.TYPE_LIGHTCONTROL) +
+                len(self.TYPE_JALOUSIE))
+        for cat in self.TYPE_SWITCH:
+                 logger.debug(self.neuron_name + ":       %s",  cat)
+        for cat in self.TYPE_LIGHTCONTROL:
+                 logger.debug(self.neuron_name + ":       %s",  cat)
+        for cat in self.TYPE_JALOUSIE:
+                 logger.debug(self.neuron_name + ":       %s",  cat)                 
+     
+        logger.debug(self.neuron_name + ": Defined Elements: %d", 
+                sum)               
+        logger.debug(self.neuron_name + ": (This is a list of supported "+
+                "elements. There might be more elements defined in your " +
+                "strcuture definition.)")
+                
+        for cat in self._controls:
+            subcontrol = self._controls[cat]['controls']
+            for controls in subcontrol:               
+                logger.debug(self.neuron_name + ":       %s [%s, %s] in %s %s",
+                    subcontrol[controls]['name'],  
+                    subcontrol[controls]['type'],
+                    self._controls[cat]['name'],   
+                    self._roomtitle, 
+                    self._rooms[subcontrol[controls]['room']]['name']) 
+                
     def load_config(self):
         """
         Load the JSON Config File of the loxone miniserver.
@@ -231,7 +287,7 @@ class LoxSControl(NeuronModule):
                                                       self._password))
         except requests.ConnectionError:
             logger.debug(self.neuron_name +
-                         ' Structure Definition Request failed.')
+                         ': Structure Definition Request failed.')
             return False
 
         try:
@@ -242,23 +298,23 @@ class LoxSControl(NeuronModule):
             raw_cats = r.json()['cats']
         except requests.exceptions.HTTPError:
             logger.debug(self.neuron_name +
-                         ' Structure Definition Request failed with \
+                         ': Structure Definition Request failed with \
                 response: %r',
                          r.text)
             return False
         except requests.exceptions.RequestException:
             logger.debug(self.neuron_name +
-                         ' Structure Definition Request failed.')
+                         ': Structure Definition Request failed.')
             return False
         except ValueError as e:
             logger.debug(self.neuron_name +
-                         ' Structure Definition cannot be parsed,\
-                response: %s',
+                         ': Structure Definition cannot be loaded,'
+                         'response: %s',
                          e.args[0])
             return False
         except KeyError:
             logger.debug(self.neuron_name +
-                         ' Structure Definition cannot be parsed. KeyError.')
+                         ': Structure Definition cannot be loaded. KeyError.')
             return False
 
         # Parse structure
@@ -267,28 +323,28 @@ class LoxSControl(NeuronModule):
             self._language = raw_info['languageCode']
             self._location = raw_info['location']
             self._roomtitle = raw_info['roomTitle']
-
+            
             # Get rooms
             self._rooms = {}
             for room in raw_rooms:
                 self._rooms[room] = {"name": raw_rooms[room]['name'],
-                                     " uid": raw_rooms[room]['uuid']}
+                                     "uid": raw_rooms[room]['uuid']}
 
             # Get categories
             self._controls = {}
             for cat in raw_cats:
                 self._controls[cat] = {"name": raw_cats[cat]['name'],
-                                       " uid": raw_cats[cat]['uuid'],
-                                       " type": raw_cats[cat]['type'],
-                                       " controls": {}}
+                                       "uid": raw_cats[cat]['uuid'],
+                                       "type": raw_cats[cat]['type'],
+                                       "controls": {}}
 
             # fill controls
             self.extract_controls(raw_controls)
 
         except KeyError:
-            self._logger.critical(self.neuron_name +
-                                ' Structure Definition cannot be parse. \
-                 KeyError.'
+            logger.debug(self.neuron_name +
+                                ': Structure Definition cannot be parsed. '+
+                                'KeyError.'
                                   )
             return False
 # TODO: FIX Language check
@@ -302,9 +358,9 @@ class LoxSControl(NeuronModule):
         # profile language is set to %s",self._language,language)
 
         # debug print
-        pprint.pprint(self._controls)
+        #pprint.pprint(self._controls)
 
-        pprint.pprint(self._rooms)
+        #pprint.pprint(self._rooms)
 
         return True
 
@@ -314,7 +370,8 @@ class LoxSControl(NeuronModule):
 
         :param jsonconfig: controls block of the json file
 
-        """
+        """       
+        
         # Step though each entry
         for control in jsonconfig:
                 if jsonconfig[control]['type'] in self.TYPE_SWITCH:
@@ -331,7 +388,7 @@ class LoxSControl(NeuronModule):
                                 self._controls[jsonconfig[control]['cat']][
                                     'controls'][subcontrol] = {
                                     "name": subcontrols[subcontrol]['name'],
-                                    "uidAction": subcontrols[subcontrol][
+                                    "uidAction": subcontrols[subcontrol][\
                                         'uuidAction'],
                                     "room": jsonconfig[control]['room'],
                                     "type": subcontrols[subcontrol]['type']}

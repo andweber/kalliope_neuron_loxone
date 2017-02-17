@@ -5,7 +5,7 @@ import mock
 import logging
 
 from kalliope.core.NeuronModule import MissingParameterException
-from loxscontrol import LoxSControl
+from loxscontrol import Loxscontrol
 
 logging.basicConfig()
 logger = logging.getLogger("kalliope.neuron.loxone")
@@ -57,7 +57,27 @@ class TestLoxSControl(unittest.TestCase):
                           'name': u'Something',
                           'type': u'undefined',
                           'uid': u'0c100510'}}
+
         self.change_newstate = "on"
+
+        self.lxstructuredef = {u'0c11982f': {u'name': u'Light', u'isFavorite': False,
+            u'isSecured': False, u'cat': u'0c10052e', 
+            u'states': {u'active': u'0d01671c'}, 
+            u'uuidAction': u'0d01671c', 
+            u'defaultRating': 0,
+            u'type': u'Switch', 
+            u'room': u'0c10052e'}, 
+            u'0c101c69': {u'name': u'K\xfcche', u'isFavorite': False, 
+            u'isSecured': False, u'cat': u'0c10052e', 
+            u'states': {u'down': u'0c101c69', 
+            u'position': u'0c101c69', 
+            u'up': u'0c101c69', 
+            u'shadePosition': u'0c101c69'}, 
+            u'uuidAction': u'0c101c69', 
+            u'defaultRating': 0, u'details': {u'animation': 1, 
+            u'isAutomatic': False}, u'type': u'Jalousie', 
+            u'room': u'0ceefd17'}            
+            }
 
     def test_parameters(self):
         """
@@ -70,7 +90,7 @@ class TestLoxSControl(unittest.TestCase):
         def run_test(parameters_to_test):
             """Expect an assert while initilising class"""
             with self.assertRaises(MissingParameterException):
-                LoxSControl(**parameters_to_test)
+                Loxscontrol(**parameters_to_test)
 
         # empty
         parameters = dict()
@@ -149,14 +169,14 @@ class TestLoxSControl(unittest.TestCase):
 
             """
             with mock.patch("requests.get") as mock_requests_get:
-                loxone_test = LoxSControl(**parameters)
+                loxone_test = Loxscontrol(**parameters)
                 self.assertEqual(loxone_test.message["status_code"],
                                  expected_state)
                 if expected_uuid is not None:
                     mock_requests_get.\
                         assert_called_once_with("http://" +
                                                 self.lxms_ip +
-                                                LoxSControl.SPSIO +
+                                                Loxscontrol.SPSIO +
                                                 "0c119829" + "/" +
                                                 self.change_newstate,
                                                 auth=(self.lxms_user,
@@ -203,11 +223,11 @@ class TestLoxSControl(unittest.TestCase):
             "control_name": "name"
         }
         with mock.patch("requests.get") as mock_requests_get:
-                self.loxone_test = LoxSControl(**parameters)
+                self.loxone_test = Loxscontrol(**parameters)
                 mock_requests_get.\
                     assert_called_once_with("http://" +
                                             self.lxms_ip +
-                                            LoxSControl.STRUCTUREDEF,
+                                            Loxscontrol.STRUCTUREDEF,
                                             auth=(self.lxms_user,
                                                   self.lxms_password))
                 mock_requests_get.reset_mock()
