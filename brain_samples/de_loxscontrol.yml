@@ -1,0 +1,26 @@
+---
+- name: "turn-on-named"
+  signals:
+    - order: "schalte das {{control_name}} an"
+  neurons:
+    - loxscontrol:
+        lx_ip: "MSIP"
+        lx_user: "MS_user"
+        lx_password: "MS_password"
+        args: 
+            - control_name 
+        newstate: "on"
+        file_template:  "templates/loxscontrol_template.j2"
+
+- name: "turn-off-named"
+  signals:
+    - order: "schalte das {{control_name}} aus"
+  neurons:
+    - loxscontrol:
+        lx_ip: "MSIP"
+        lx_user: "MS_user"
+        lx_password: "MS_password"
+        args: 
+            - control_name 
+        newstate: "off"         
+        file_template:  "templates/loxscontrol_template.j2"
