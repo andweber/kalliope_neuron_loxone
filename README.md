@@ -1,5 +1,8 @@
 # Kalliope LoxScontrol Neuron
 
+[![Build Status](https://travis-ci.org/andweber/kalliope_neuron_loxone.svg?branch=master)](https://travis-ci.org/andweber/kalliope_neuron_loxone)
+[![Gitter](https://badges.gitter.im/gitterHQ/gitter.svg)](https://gitter.im/kalliope-project/Lobby)
+
 ## Synopsis
 
 This neuron allows to control a Loxone Homeautomation from [Kalliope](https://github.com/kalliope-project/kalliope/).
