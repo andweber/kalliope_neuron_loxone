@@ -30,8 +30,9 @@ install:
 
 # command to run tests
 script: 
-  - pytest
-#    - "coverage run ./setup.py test"
-#after_success:
-#    - "coverage report"
-#    - "coveralls"
+  - python -m unittest Tests.TestLoxSControl
+  - "coverage run Tests.TestLoxSControl"
+
+after_success:
+  - "coverage report"
+  - "coveralls"
