@@ -9,28 +9,27 @@ before_install:
 #- sudo apt-get update
 #- sudo apt-get install $(cat install/deb-packages_requirements.txt)
 #- sudo apt-get install libstdc++6
-- wget https://bootstrap.pypa.io/get-pip.py
-- sudo python get-pip.py
-
+  - wget https://bootstrap.pypa.io/get-pip.py
+  - sudo python get-pip.py
 # Install additional testing software
-    - "pip install python-coveralls --download-cache $HOME/.pip-cache"
-    - "pip install coverage  --download-cache $HOME/.pip-cache"
-    - "pip install flake8  --download-cache $HOME/.pip-cache"
+  - "pip install python-coveralls --download-cache $HOME/.pip-cache"
+  - "pip install coverage  --download-cache $HOME/.pip-cache"
+  - "pip install flake8  --download-cache $HOME/.pip-cache"
 install: 
 # install kalliope
-- "wget https://github.com/kalliope-project/kalliope/archive/master.zip"
-- "unzip master.zip"
-- "cd kalliope-master"
+  - "wget https://github.com/kalliope-project/kalliope/archive/master.zip"
+  - "unzip master.zip"
+  - "cd kalliope-master"
 #- "sudo apt-get install $(cat install/files/deb-packages_requirements.txt)"
-- "python setup.py install"
-- "cd .."
+  - "python setup.py install"
+  - "cd .."
 
 # install neuron dependencies
-- "pip install -r install/python_requirements.txt"
+  - "pip install -r install/python_requirements.txt"
 
 # command to run tests
 script: 
-    - pytest
+  - pytest
 #    - "coverage run ./setup.py test"
 #after_success:
 #    - "coverage report"
