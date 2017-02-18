@@ -4,10 +4,6 @@ import unittest
 import mock
 import logging
 
-import sys
-print sys.executable
-print "\n".join(sys.path)
-
 from kalliope.core.NeuronModule import MissingParameterException
 from loxscontrol import Loxscontrol
 
@@ -293,7 +289,7 @@ class TestLoxSControl(unittest.TestCase):
 # TODO: a test which feeds a json and retrieves the controls
         # mock request get call and return a json file
 
-#if __name__ == '__main__':
-suite = unittest.TestLoader().loadTestsFromTestCase(TestLoxSControl)
-unittest.TextTestRunner(verbosity=2).run(suite)
-    # unittest.main()
+if __name__ == '__main__':
+#suite = unittest.TestLoader().loadTestsFromTestCase(TestLoxSControl)
+#unittest.TextTestRunner(verbosity=2).run(suite)
+     unittest.main()
