@@ -4,6 +4,10 @@ import unittest
 import mock
 import logging
 
+import sys
+print sys.executable
+print "\n".join(sys.path)
+
 from kalliope.core.NeuronModule import MissingParameterException
 from loxscontrol import Loxscontrol
 
@@ -86,13 +90,8 @@ class TestLoxSControl(unittest.TestCase):
             }
 
     def test_parameters(self):
-        """
-        Test for all combinations of missing parameters.
+        """Test for all combinations of missing parameters."""
 
-        :return:
-
-
-        """
         def run_test(parameters_to_test):
             """Expect an assert while initilising class"""
             with self.assertRaises(MissingParameterException):
@@ -158,14 +157,7 @@ class TestLoxSControl(unittest.TestCase):
         run_test(parameters)
         
     def test_get(self):
-        """
-            Test get functions.
-
-            Verify that the get functions work correctly.
-
-            :return:
-
-        """        
+        """Test get functions."""        
         
         parameters = {
             "lx_user": self.lxms_user,
@@ -227,15 +219,7 @@ class TestLoxSControl(unittest.TestCase):
                 
 
     def test_change_by_name(self):
-        """
-            Test changing a control element by its name.
-
-            It is verified that the neuron return code is correct
-            and the Miniserver API is called correctly.
-
-            :return:
-
-        """
+        """Test changing a control element by its name."""
         def run_test(parameters,  expected_uuid,  expected_state):
             """
                 Initialise class, check if Miniserver API is called correctly.
@@ -283,12 +267,8 @@ class TestLoxSControl(unittest.TestCase):
         run_test(parameters,  expected_uuid,  expected_state)
 
     def test_load_config(self):
-        """
-            Test loading the structure definition of the miniserver.
+        """Test loading the structure definition of the miniserver."""
 
-            :return:
-
-        """
         # no structure given -> neurons tries to load structure
         # -> we catch this
         parameters = {
@@ -313,5 +293,7 @@ class TestLoxSControl(unittest.TestCase):
 # TODO: a test which feeds a json and retrieves the controls
         # mock request get call and return a json file
 
-if __name__ == '__main__':
-    unittest.main()
+#if __name__ == '__main__':
+suite = unittest.TestLoader().loadTestsFromTestCase(TestLoxSControl)
+unittest.TextTestRunner(verbosity=2).run(suite)
+    # unittest.main()

@@ -31,7 +31,7 @@ install:
 # command to run tests
 script: 
   - python -m unittest Tests.TestLoxSControl
-  - "coverage run Tests.TestLoxSControl"
+  - "coverage run Tests/testloxscontrol.py"
 
 after_success:
   - "coverage report"
