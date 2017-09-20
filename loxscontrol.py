@@ -37,16 +37,21 @@ class Loxscontrol(NeuronModule):
     CAT_UNDEF = "undefined"
     CAT_ROOM = "room"
 
+    # Actions used
+    ACT_CHANGE = "change"         #changes a state of an element
+    ACT_LIST = "list"                   #names all given elements element
+
     # Status Code Definitions
     # IncompleteRequest - Parameter is missing or not complete / consistent
     # Complete                 - Completed
     # StateChangeError  -  State of Control Element was not changed.
     #                                   Name not found, or changing failed
-    # ReadText                 - A text is given to read.
+    # List                          - List what is given in summary.
     STATUS_CODE_DEF = {
                        "IncompleteRequest",
                        "Complete",
-                       "StateChangeError"
+                       "StateChangeError", 
+                       "List"
                        }
 
     def __init__(self, *args, **kwargs):
@@ -61,6 +66,7 @@ class Loxscontrol(NeuronModule):
         self._password = kwargs.get('lx_password', None)
         self._controls = kwargs.get('lx_structuredef', None)
 
+        self.action= kwargs.get('action', None)
         self.change_room = kwargs.get('control_room', None)
         self.change_cattype = kwargs.get('control_type', None)
         self.change_name = kwargs.get('control_name', None)
@@ -76,41 +82,14 @@ class Loxscontrol(NeuronModule):
         # check if parameters have been provided
         if self._is_parameters_ok():
 
-            # name and state is given
-            # don't pay attention to kategorie
-            if (self.change_name is not None) and \
-                    (self.change_newstate is not None):
-                if self.change_switch_state_byname(self.change_name,
-                                                   self.change_newstate):
-                    logger.debug(self.neuron_name +
-                                 ": State of %s changed to %s",
-                                 self.change_name,
-                                 self.change_newstate)
-                    self.status_code = "Complete"
-                else:
-                    logger.debug(self.neuron_name +
-                                 " State of %s not changed!",
-                                 self.change_name)
-                    self.status_code = "StateChangeError"
+            # action change
+            if self.action is ACT_CHANGE:
+                self.action_change()
 
-            # Type lights and room and state is given
-            if (self.change_cattype is self.CAT_LIGTH) and \
-                    (self.change_room is not None) and \
-                    (self.change_newstate is not None):
-                if self.change_lights_byroom(self.change_room,
-                                                   self.change_newstate):
-                    logger.debug(self.neuron_name +
-                                 ": State of %s in room %s changed to %s",
-                                 self.change_name,
-                                 self.change_newstate)
-                    self.status_code = "Complete"
-                else:
-                    logger.debug(self.neuron_name +
-                                 " State of %s not changed!",
-                                 self.change_name)
-                    self.status_code = "StateChangeError"
-
-
+            # action list
+            if self.action is ACT_LIST:
+                self.action_list()
+                
             # no valid combination found
             if self.status_code is None:
                 MissingParameterException(self.neuron_name +
@@ -156,6 +135,11 @@ class Loxscontrol(NeuronModule):
                 "password"
                 )
 
+        # action is set
+        if self.action is None:
+            raise MissingParameterException(
+                self.neuron_name + ": needs an action ")
+
         # load loxone config from miniserver
         if self._controls is None:
             if not self.load_config():
@@ -172,6 +156,62 @@ class Loxscontrol(NeuronModule):
                                             ": needs something to do")
 
         return True
+
+    def action_change(self):
+        """
+        Change the state of a switch 
+
+        """
+        
+        # name and state is given
+        # don't pay attention to categorie
+        if (self.change_name is not None) and \
+                    (self.change_newstate is not None):
+                if self.change_switch_state_byname(self.change_name,
+                                                   self.change_newstate):
+                    logger.debug(self.neuron_name +
+                                 ": State of %s changed to %s",
+                                 self.change_name,
+                                 self.change_newstate)
+                    self.status_code = "Complete"
+                else:
+                    logger.debug(self.neuron_name +
+                                 " State of %s not changed!",
+                                 self.change_name)
+                    self.status_code = "StateChangeError"
+
+        # Type lights and room and state is given
+        if (self.change_cattype is self.CAT_LIGTH) and \
+                    (self.change_room is not None) and \
+                    (self.change_newstate is not None):
+                if self.change_lights_byroom(self.change_room,
+                                                   self.change_newstate):
+                    logger.debug(self.neuron_name +
+                                 ": State of %s in room %s changed to %s",
+                                 self.change_name,
+                                 self.change_newstate)
+                    self.status_code = "Complete"
+                else:
+                    logger.debug(self.neuron_name +
+                                 " State of %s not changed!",
+                                 self.change_name)
+                    self.status_code = "StateChangeError"
+
+    def action_list(self):
+        """
+        List known elements 
+
+        """
+        # check that cattype is given
+        if (self.change_cattype is not None):
+            
+                #check cattyp - equals room:
+                if (self.change_cattype is self.CAT_ROOM):
+                    self.list_rooms()
+
+        # similar for switch, lights etc.
+
+
 
     def change_state_byuuid(self, controluuid,  newstate):
         """
@@ -292,6 +332,21 @@ class Loxscontrol(NeuronModule):
                 if subcontrol[element]["name"] in controlname:
                     return subcontrol[element]["uidAction"]
         return None
+        
+    def list_rooms(self):
+        """
+        List all rooms
+
+        """    
+        # Rooms
+        # logger.debug(self.neuron_name + ": Room title: %s", self._roomtitle)        
+        logger.debug(self.neuron_name + ": No. of Rooms: %d", 
+                len(self._rooms))
+        for room in self._rooms:
+            logger.debug(self.neuron_name + ":       %s",self._rooms[room]['name'])   
+            self.summary = ", %s", self._rooms[room]['name']
+        
+        
 
     def show_configinfo(self):
         """

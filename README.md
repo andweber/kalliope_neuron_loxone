@@ -34,6 +34,10 @@ As an alternative have a look at the [LoxBerry](http://www.loxwiki.eu:80/x/o4CO)
 | lx_ip     | YES      |         |         | Miniserver IP |
 | lx_name  | YES      |         |         | User info. |
 | lx_password  | YES      |         |         | User info. |
+| action  | YES      |         |  change, list       | change a state |
+| control_name  | NO      |         |         | Name of the element |
+| control_type  | NO      |         |   lights,  shading, room | Type of the element |
+| newstate  | NO      |         |   on, off, ... | state to set, or value |
 
 ## Return Values
 
@@ -49,12 +53,15 @@ Simple example :
 ```
   - name: "lx_turnon_light"
     signals:
-      - order: "Turn on {{ lx_control_name }}"
+      - order: "Turn on {{ control_name }}"
     neurons:
       - loxScontrol:
           lx_ip: "lx ip"
           lx_user: "lx user name"
           lx_password: "my_password"
+          action: "change"
+          control_name: "{{ control_name }}"
+          newstate: "on"
           say_template: 
             -  "Your order was {{ status_code }}."    
 ```

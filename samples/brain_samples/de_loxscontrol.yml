@@ -1,0 +1,38 @@
+---
+- name: "turn-on-named"
+  signals:
+    - order: "schalte das {{control_name}} an"
+  neurons:
+    - loxscontrol:
+        lx_ip: "{{lx_ip}}"
+        lx_name: "{{lx_user}}"
+        lx_password: "{{lx_password}}"        
+        action: "change"        
+        control_name: "{{control_name}}" 
+        newstate: "on"
+        file_template:  "templates/loxscontrol_template.j2"
+
+- name: "turn-off-named"
+  signals:
+    - order: "schalte das {{control_name}} aus"
+  neurons:
+    - loxscontrol:
+        lx_ip: "{{lx_ip}}"
+        lx_name: "{{lx_user}}"
+        lx_password: "{{lx_password}}"         
+        action: "change"    
+        control_name: "{{control_name}}"
+        newstate: "off"         
+        file_template:  "templates/loxscontrol_template.j2"
+
+- name: "list-room"
+  signals:
+    - order: "Nenne alle Räume"
+  neurons:
+    - loxscontrol:
+        lx_ip: "{{lx_ip}}"
+        lx_name: "{{lx_user}}"
+        lx_password: "{{lx_password}}"      
+        control_type: "room"
+        action: "list"   
+        file_template:  "templates/loxscontrol_template.j2"
