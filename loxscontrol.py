@@ -83,11 +83,11 @@ class Loxscontrol(NeuronModule):
         if self._is_parameters_ok():
 
             # action change
-            if self.action is ACT_CHANGE:
+            if self.action is self.ACT_CHANGE:
                 self.action_change()
 
             # action list
-            if self.action is ACT_LIST:
+            if self.action is self.ACT_LIST:
                 self.action_list()
                 
             # no valid combination found
