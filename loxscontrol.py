@@ -51,7 +51,8 @@ class Loxscontrol(NeuronModule):
                        "IncompleteRequest",
                        "Complete",
                        "StateChangeError", 
-                       "List"
+                       "List", 
+                       "Error"
                        }
 
     def __init__(self, *args, **kwargs):
@@ -83,11 +84,11 @@ class Loxscontrol(NeuronModule):
         if self._is_parameters_ok():
 
             # action change
-            if self.action is self.ACT_CHANGE:
+            if self.action == self.ACT_CHANGE:
                 self.action_change()
 
             # action list
-            if self.action is self.ACT_LIST:
+            if self.action == self.ACT_LIST:
                 self.action_list()
                 
             # no valid combination found
@@ -181,17 +182,17 @@ class Loxscontrol(NeuronModule):
                     self.status_code = "StateChangeError"
 
         # Type lights and room and state is given
-        if (self.change_cattype is self.CAT_LIGTH) and \
+        if (self.change_cattype == self.CAT_LIGTH) and \
                     (self.change_room is not None) and \
                     (self.change_newstate is not None):
-                if self.change_lights_byroom(self.change_room,
-                                                   self.change_newstate):
-                    logger.debug(self.neuron_name +
-                                 ": State of %s in room %s changed to %s",
-                                 self.change_name,
-                                 self.change_newstate)
-                    self.status_code = "Complete"
-                else:
+#                if self.change_lights_byroom(self.change_room,
+#                                                   self.change_newstate):
+#                    logger.debug(self.neuron_name +
+#                                 ": State of %s in room %s changed to %s",
+#                                 self.change_name,
+#                                self.change_newstate)
+#                    self.status_code = "Complete"
+#                else:
                     logger.debug(self.neuron_name +
                                  " State of %s not changed!",
                                  self.change_name)
@@ -206,8 +207,12 @@ class Loxscontrol(NeuronModule):
         if (self.change_cattype is not None):
             
                 #check cattyp - equals room:
-                if (self.change_cattype is self.CAT_ROOM):
-                    self.list_rooms()
+                if (self.change_cattype == self.CAT_ROOM):
+                        self.summary=self.list_rooms()
+                        if  self.summary is not None:
+                            self.status_code = "List"
+                        else:
+                            self.status_code = "Error"
 
         # similar for switch, lights etc.
 
@@ -335,17 +340,20 @@ class Loxscontrol(NeuronModule):
         
     def list_rooms(self):
         """
-        List all rooms
+        Returns a str of all rooms separated by comma
 
-        """    
-        # Rooms
-        # logger.debug(self.neuron_name + ": Room title: %s", self._roomtitle)        
-        logger.debug(self.neuron_name + ": No. of Rooms: %d", 
-                len(self._rooms))
-        for room in self._rooms:
-            logger.debug(self.neuron_name + ":       %s",self._rooms[room]['name'])   
-            self.summary = ", %s", self._rooms[room]['name']
+        """     
         
+        roomlist = None
+
+        for room in self._rooms:
+            logger.debug(self.neuron_name + ":       %s",self._rooms[room]['name'])
+            if roomlist is None:
+                roomlist = "%s"%self._rooms[room]['name']
+            else:
+                roomlist = roomlist + ", %s"%self._rooms[room]['name']
+        
+        return roomlist    
         
 
     def show_configinfo(self):

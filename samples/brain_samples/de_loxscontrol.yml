@@ -5,7 +5,7 @@
   neurons:
     - loxscontrol:
         lx_ip: "{{lx_ip}}"
-        lx_name: "{{lx_user}}"
+        lx_user: "{{lx_user}}"
         lx_password: "{{lx_password}}"        
         action: "change"        
         control_name: "{{control_name}}" 
@@ -18,7 +18,7 @@
   neurons:
     - loxscontrol:
         lx_ip: "{{lx_ip}}"
-        lx_name: "{{lx_user}}"
+        lx_user: "{{lx_user}}"
         lx_password: "{{lx_password}}"         
         action: "change"    
         control_name: "{{control_name}}"
@@ -31,7 +31,7 @@
   neurons:
     - loxscontrol:
         lx_ip: "{{lx_ip}}"
-        lx_name: "{{lx_user}}"
+        lx_user: "{{lx_user}}"
         lx_password: "{{lx_password}}"      
         control_type: "room"
         action: "list"   
